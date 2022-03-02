@@ -1,0 +1,393 @@
+{
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "description": "业务分类，需要保证不重复"
+    },
+    "processDesc": {
+      "type": "string",
+      "description": "流程描述信息"
+    },
+    "lastProcessKey": {
+      "type": "string",
+      "description": "最新版本流程ID[支持SPEL]"
+    },
+    "lastProcessVersion": {
+      "type": "string",
+      "description": "最新版本流程版本号[支持SPEL]"
+    },
+    "master": {
+      "type": "object",
+      "description": "可配置多个不同流程， 流程ID：{流程信息}",
+      "additionalProperties": {
+        "$ref": "#/properties/master"
+      },
+      "properties": {
+        "processVersion": {
+          "type": "string",
+          "description": "当前流程版本号"
+        },
+        "node": {
+          "type": "object",
+          "description": "配置节点信息，节点ID：{节点信息}",
+          "additionalProperties": {
+            "$ref": "#/properties/master/properties/node"
+          },
+          "default": {},
+          "properties": {
+            "nodeKey": {
+              "type": "string",
+              "description": "节点ID，不配置默认为当前KEY"
+            },
+            "nodeName": {
+              "type": "string",
+              "description": "节点名称"
+            },
+            "allowOtherVariable": {
+              "type": "boolean",
+              "description": "是否允许其他未定义的变量进行操作(是否可保存未定义的参数) 默认false"
+            },
+            "otherVariableThrowException": {
+              "type": "boolean",
+              "description": "存在未配置的变量是否抛出异常（数据校验）"
+            },
+            "isParallel": {
+              "type": "boolean",
+              "description": "是否为并行节点，默认false"
+            },
+            "ignoreFieldNames": {
+              "type": "array",
+              "description": "忽略的参数名称（不进行处置和保存）"
+            },
+            "beforeSaveHandleNames": {
+              "type": "array",
+              "description": "前置节点保存处理器"
+            },
+            "saveHandleNames": {
+              "type": "array",
+              "description": "执行节点保存处理器（有默认值，谨慎修改）"
+            },
+            "afterSaveHandleNames": {
+              "type": "array",
+              "description": "后置节点保存处理器"
+            },
+            "option": {
+              "type": "object",
+              "description": "此节点的操作配置",
+              "additionalProperties": {
+                "$ref": "#/properties/master/properties/node/properties/option"
+              },
+              "default": {},
+              "properties": {
+                "save": {
+                  "type": "object",
+                  "default": {},
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "description": "操作的Key"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "操作的名称"
+                    },
+                    "hide": {
+                      "type": "boolean",
+                      "description": "操作是否隐藏"
+                    },
+                    "hideEl": {
+                      "type": "string",
+                      "description": "操作是否隐藏 EL表达式"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "操作请求的 url"
+                    },
+                    "className": {
+                      "type": "string",
+                      "description": "解析此操作的类对象名"
+                    }
+                  }
+                },
+                "submit": {
+                  "type": "object",
+                  "default": {},
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "description": "操作的Key"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "操作的名称"
+                    },
+                    "hide": {
+                      "type": "boolean",
+                      "description": "操作是否隐藏"
+                    },
+                    "hideEl": {
+                      "type": "string",
+                      "description": "操作是否隐藏 EL表达式"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "操作请求的 url"
+                    },
+                    "className": {
+                      "type": "string",
+                      "description": "解析此操作的类对象名"
+                    }
+                  }
+                },
+                "flow": {
+                  "type": "object",
+                  "default": {},
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "description": "操作的Key"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "操作的名称"
+                    },
+                    "hide": {
+                      "type": "boolean",
+                      "description": "操作是否隐藏"
+                    },
+                    "hideEl": {
+                      "type": "string",
+                      "description": "操作是否隐藏 EL表达式"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "操作请求的 url"
+                    },
+                    "className": {
+                      "type": "string",
+                      "description": "解析此操作的类对象名"
+                    },
+                    "searchData": {
+                      "type": "object",
+                      "description": "数据范围查询对象"
+                    }
+                  }
+                },
+                "reject": {
+                  "type": "object",
+                  "default": {},
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "description": "操作的Key"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "操作的名称"
+                    },
+                    "hide": {
+                      "type": "boolean",
+                      "description": "操作是否隐藏"
+                    },
+                    "hideEl": {
+                      "type": "string",
+                      "description": "操作是否隐藏 EL表达式"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "操作请求的 url"
+                    },
+                    "className": {
+                      "type": "string",
+                      "description": "解析此操作的类对象名"
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "配置数据"
+                    }
+                  }
+                }
+              }
+            },
+            "variable": {
+              "type": "object",
+              "description": "配置当前节点的变量信息，变量名称：{变量信息}",
+              "additionalProperties": {
+                "$ref": "#/properties/master/properties/node/properties/variable"
+              },
+              "default": {},
+              "properties": {
+                "requestEl": {
+                  "type": "string",
+                  "description": "支持SPEL表达式，'1'为需要，'0'为不需要, 表达式需要以 “${”开头，“}”结尾"
+                },
+                "request": {
+                  "type": "boolean",
+                  "description": "是否必须项"
+                },
+                "desc": {
+                  "type": "string",
+                  "description": "描述字段"
+                },
+                "requestMessage": {
+                  "type": "string",
+                  "description": "必填提示内容"
+                },
+                "updatePropertyHandleValue": {
+                  "type": "boolean",
+                  "description": "是否更新此字段信息到处理器上下文中，默认true"
+                },
+                "belong": {
+                  "type": "string",
+                  "description": "此变量归属对象，但都会存到variable中",
+                  "enum": [
+                    "master",
+                    "node",
+                    "variable"
+                  ]
+                },
+                "variableType": {
+                  "type": "string",
+                  "description": "变量类型，基础（string,list）其余的都是根据业务衍生出来的，通过实现SillyVariableConvertor接口可拓展[支持SPEL]",
+                  "enum": [
+                    "string",
+                    "date",
+                    "dateTime",
+                    "list",
+                    "filegroup",
+                    "filegroups",
+                    "dict",
+                    "dicts",
+                    "user",
+                    "users",
+                    "office",
+                    "offices",
+                    "project",
+                    "projects",
+                    "station",
+                    "stations",
+                    "supplier",
+                    "suppliers",
+                    "vehicle",
+                    "vehicles"
+                  ]
+                },
+                "activitiHandler": {
+                  "type": "string",
+                  "description": "工作流变量类型，基础（string,list）其余的都是根据业务衍生出来的，通过实现SillyVariableConvertor接口可拓展[支持SPEL]",
+                  "enum": [
+                    "string",
+                    "list"
+                  ]
+                },
+                "userGroupVariableName": {
+                  "type": "string",
+                  "description": "分组变量名称"
+                },
+                "defaultText": {
+                  "type": "string",
+                  "description": "变量的默认值，支持spel表达式，表达式需要以 “${”开头，“}”结尾"
+                },
+                "saveHandleNames": {
+                  "type": "array",
+                  "description": "变量保存处置器名称，可配置多个按配置的顺序执行，保存处置器可通过实现SillyVariableSaveHandle接口拓展",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "default",
+                      "dataJoin",
+                      "overwrite",
+                      "save",
+                      "skip",
+                      "deleteOtherTask"
+                    ]
+                  }
+                },
+                "htmlType": {
+                  "type": "string",
+                  "description": "HTML生成使用的参数",
+                  "enum": [
+                    "el-input",
+                    "my-select",
+                    "my-upload"
+                  ]
+                },
+                "htmlConfig": {
+                  "type": "object",
+                  "description": "HTML生成使用的参数",
+                  "properties": {
+                    "tagName": {
+                      "type": "string"
+                    },
+                    "fieldName": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "request": {
+                      "type": "boolean"
+                    },
+                    "desc": {
+                      "type": "string"
+                    },
+                    "requestDesc": {
+                      "type": "string"
+                    },
+                    "params": {
+                      "type": "object",
+                      "description": "html参数",
+                      "additionalProperties": {
+                        "$ref": "#/properties/master/properties/node/properties/variable/properties/htmlConfig/properties/params"
+                      },
+                      "properties": {
+                        "dataList": {
+                          "description": "下拉选 选项集合 [{name: value}]",
+                          "type": "array"
+                        },
+                        "buttonName": {
+                          "description": "文件上传按钮名称",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "attrConfigs": {
+                      "type": "object",
+                      "description": "属性配置 添加到html属性标签中 {attr_name: attr_value} => <tag attr_name='attr_value'></tag>",
+                      "additionalProperties": {
+                        "$ref": "#/properties/master/properties/node/properties/variable/properties/htmlConfig/properties/attrConfigs/properties/attrConfigsName"
+                      },
+                      "properties": {
+                        "multiple": {
+                          "type": "string",
+                          "description": "my-select 多选标记",
+                          "enum": [
+                            "multiple"
+                          ]
+                        },
+                        "search-data": {
+                          "type": "string",
+                          "description": "my-select 查询数据范围"
+                        },
+                        "res": {
+                          "type": "string",
+                          "description": "my-select 数据资源值"
+                        },
+                        "dict-type": {
+                          "type": "string",
+                          "description": "my-select 字典type"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "default": true
+}

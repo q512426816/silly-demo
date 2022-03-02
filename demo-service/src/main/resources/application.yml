@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    dynamic:
+      primary: master 
+      strict: false
+      datasource:
+        master:
+          url: jdbc:mysql://127.0.0.1:3306/silly_activiti?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
+          username: root
+          password: root
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+      
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath*:/mappings/**/*.xml
+
+silly:
+  entity-scan-package: com.iqiny.silly.demo.**.entity
+  process-pattern: classpath:silly/*.json
+  default-engine-service-clazz: com.iqiny.silly.demo.common.engine.MySillyEngineService

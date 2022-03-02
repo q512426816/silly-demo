@@ -1,0 +1,147 @@
+{
+  "category": "silly_reimbursement",
+  "processDesc": "员工差旅费用报销流程",
+  "lastProcessKey": "silly_reimbursement_v1",
+  "firstNodeKey": "T10010",
+  "master": {
+    "silly_reimbursement_v1": {
+      "processVersion": "v1",
+      "node": {
+        "T10010": {
+          "nodeName": "报销单填写",
+          "beforeSaveHandleNames": [],
+          "option": {
+            "submit": {},
+            "flow": {}
+          },
+          "variable": {
+            "createUserId": {
+              "desc": "申请人ID",
+              "activitiHandler": "string",
+              "defaultText": "${#currentUserId}"
+            },
+            "code": {
+              "desc": "报销单编号",
+              "belong": "master",
+              "defaultText": "${@reimbursementService.generatorCode(#masterId)}"
+            },
+            "money": {
+              "desc": "报销金额",
+              "belong": "master",
+              "activitiHandler": "string"
+            },
+            "fileGroupId": {
+              "desc": "报销文件组ID",
+              "belong": "master",
+              "request": false,
+              "variableType": "filegroup"
+            },
+            "remarks": {
+              "desc": "备注说明",
+              "belong": "master",
+              "request": false
+            },
+            "auditUserId": {
+              "desc": "审核人",
+              "variableType": "user",
+              "activitiHandler": "string"
+            },
+            "approveUserId": {
+              "desc": "审批人",
+              "variableType": "user",
+              "activitiHandler": "string",
+              "requestEl": "${#money > 1000}"
+            },
+            "email": {
+              "desc": "邮件发送地址",
+              "saveHandleNames": ["skip"],
+              "defaultText": "qy-1994-2008@163.com"
+            },
+            "emailInfo": {
+              "desc": "邮件内容",
+              "saveHandleNames": ["skip"],
+              "defaultText": "${#code + ' 报销申请已提交，请及时处置。' + #remarks}"
+            }
+          },
+          "afterSaveHandleNames": ["sendEmail"]
+        },
+        "T10020": {
+          "nodeName": "主管审核",
+          "option": {
+            "submit": {},
+            "flow": {},
+            "reject": {
+              "data": {
+                "T10010": "报销单填写"
+              }
+            }
+          },
+          "variable": {
+            "auditFlag": {
+              "desc": "审核标识 1：通过 0：不通过",
+              "activitiHandler": "string"
+            },
+            "auditRemarks": {
+              "desc": "审核备注",
+              "defaultText": "${#auditFlag eq '1'?'同意':null}"
+            },
+            "handleType": {
+              "desc": "处置类型",
+              "belong": "node",
+              "saveHandleNames": [
+                "skip"
+              ],
+              "defaultText": "${#auditFlag eq '0'? 'back':'next'}"
+            },
+            "nodeInfo": {
+              "desc": "履历信息",
+              "belong": "node",
+              "saveHandleNames": [
+                "skip"
+              ],
+              "defaultText": "${'主管审核意见：' + #auditRemarks}"
+            }
+          }
+        },
+        "T10030": {
+          "nodeName": "经理审批",
+          "option": {
+            "submit": {},
+            "flow": {},
+            "reject": {
+              "data": {
+                "T10010": "报销单填写"
+              }
+            }
+          },
+          "variable": {
+            "approveFlag": {
+              "desc": "审核标识 1：通过 0：不通过",
+              "activitiHandler": "string"
+            },
+            "approveRemarks": {
+              "desc": "审核备注",
+              "defaultText": "${#approveFlag eq '1'?'同意':null}"
+            },
+            "handleType": {
+              "desc": "处置类型",
+              "belong": "node",
+              "saveHandleNames": [
+                "skip"
+              ],
+              "defaultText": "${#approveFlag eq '0'? 'back':'next'}"
+            },
+            "nodeInfo": {
+              "desc": "履历信息",
+              "belong": "node",
+              "saveHandleNames": [
+                "skip"
+              ],
+              "defaultText": "${'经理审批意见：' + #approveRemarks}"
+            }
+          }
+        }
+      }
+    }
+  }
+}

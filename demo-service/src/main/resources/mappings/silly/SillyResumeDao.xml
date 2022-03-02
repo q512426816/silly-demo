@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+     Copyright  iqiny.com
+
+     https://gitee.com/iqiny/silly
+
+     project name：silly-activiti
+     project description：top silly project pom.xml file
+
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iqiny.silly.demo.common.resume.dao.MySillyResumeDao">
+
+    <select id="getHistoryMasterTask" resultType="com.iqiny.silly.core.read.MySillyMasterTask">
+        SELECT
+        T1.BUSINESS_TYPE AS "category",
+        T1.PROCESS_NODE_KEY AS "nodeKey",
+        T1.BUSINESS_ID AS "masterId"
+        FROM SILLY_RESUME T1
+        WHERE T1.DEL_FLAG = '0'
+        <if test="category!=null and category!=''">
+            AND T1.BUSINESS_TYPE = #{category}
+        </if>
+        <if test="userId!=null and userId!=''">
+            AND T1.HANDLE_USER_ID = #{userId}
+        </if>
+        GROUP BY T1.BUSINESS_TYPE, T1.PROCESS_NODE_KEY, T1.BUSINESS_ID
+    </select>
+
+</mapper>
