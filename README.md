@@ -15,6 +15,8 @@
 ​		接口文档： [https://www.apifox.cn/apidoc/shared-1ab4be20-f5e2-409a-86bb-1e0ddb8faec3](https://gitee.com/link?target=https%3A%2F%2Fwww.apifox.cn%2Fapidoc%2Fshared-1ab4be20-f5e2-409a-86bb-1e0ddb8faec3) 访问密码 : At0CBm7m 
 
 
+silly-activiti: https://gitee.com/iqiny/silly
+ps: 需要先对 silly-activiti 进行 maven install，不然会缺失jar
 
 ###### 前端DEMO 暂无
 
