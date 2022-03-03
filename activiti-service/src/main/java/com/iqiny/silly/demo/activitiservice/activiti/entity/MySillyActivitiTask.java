@@ -8,13 +8,11 @@
  */
 package com.iqiny.silly.demo.activitiservice.activiti.entity;
 
-import com.iqiny.silly.common.util.SillyAssert;
-import com.iqiny.silly.core.engine.SillyTask;
 import org.activiti.engine.task.Task;
 
 import java.io.Serializable;
 
-public class MySillyActivitiTask implements SillyTask, Serializable {
+public class MySillyActivitiTask implements Serializable {
 
     private String id;
     private String executionId;
@@ -26,7 +24,6 @@ public class MySillyActivitiTask implements SillyTask, Serializable {
     public MySillyActivitiTask(){}
 
     public MySillyActivitiTask(Task task) {
-        SillyAssert.notNull(task, "任务对象不可为空");
 
         this.id = task.getId();
         this.executionId = task.getExecutionId();
@@ -36,7 +33,7 @@ public class MySillyActivitiTask implements SillyTask, Serializable {
         this.assignee = task.getAssignee();
     }
 
-    @Override
+
     public String getId() {
         return id;
     }
@@ -45,7 +42,7 @@ public class MySillyActivitiTask implements SillyTask, Serializable {
         this.id = id;
     }
 
-    @Override
+
     public String getExecutionId() {
         return executionId;
     }
@@ -54,7 +51,7 @@ public class MySillyActivitiTask implements SillyTask, Serializable {
         this.executionId = executionId;
     }
 
-    @Override
+
     public String getProcessInstanceId() {
         return processInstanceId;
     }
@@ -63,7 +60,7 @@ public class MySillyActivitiTask implements SillyTask, Serializable {
         this.processInstanceId = processInstanceId;
     }
 
-    @Override
+
     public String getName() {
         return name;
     }
@@ -72,7 +69,7 @@ public class MySillyActivitiTask implements SillyTask, Serializable {
         this.name = name;
     }
 
-    @Override
+
     public String getTaskDefinitionKey() {
         return taskDefinitionKey;
     }
@@ -81,7 +78,7 @@ public class MySillyActivitiTask implements SillyTask, Serializable {
         this.taskDefinitionKey = taskDefinitionKey;
     }
 
-    @Override
+
     public String getAssignee() {
         return assignee;
     }
@@ -90,7 +87,7 @@ public class MySillyActivitiTask implements SillyTask, Serializable {
         this.assignee = assignee;
     }
 
-    @Override
+
     public Object getTask() {
         return null;
     }

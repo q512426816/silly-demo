@@ -1,18 +1,10 @@
 package com.iqiny.silly.demo.activitiservice.activiti.service;
 
 
-import com.iqiny.silly.activiti.RejectToAnyWhereTaskCmd;
-import com.iqiny.silly.activiti.SillyActivitiTask;
-import com.iqiny.silly.common.SillyConstant;
-import com.iqiny.silly.common.exception.SillyException;
-import com.iqiny.silly.common.util.StringUtils;
-import com.iqiny.silly.core.base.SillyContext;
-import com.iqiny.silly.core.base.core.SillyMaster;
-import com.iqiny.silly.core.engine.SillyEngineService;
-import com.iqiny.silly.core.engine.SillyTask;
-import com.iqiny.silly.core.group.BaseSillyTaskGroupHandle;
-import com.iqiny.silly.core.read.MySillyMasterTask;
+
 import com.iqiny.silly.demo.activitiservice.activiti.entity.MySillyActivitiTask;
+import com.iqiny.silly.demo.activitiservice.activiti.entity.MySillyMasterTask;
+import com.iqiny.silly.demo.activitiservice.activiti.entity.SillyMasterVO;
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.Expression;
 import org.activiti.engine.history.HistoricProcessInstance;
@@ -21,7 +13,6 @@ import org.activiti.engine.impl.RepositoryServiceImpl;
 import org.activiti.engine.impl.bpmn.behavior.UserTaskActivityBehavior;
 import org.activiti.engine.impl.db.IbatisVariableTypeHandler;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
-import org.activiti.engine.impl.pvm.PvmTransition;
 import org.activiti.engine.impl.pvm.ReadOnlyProcessDefinition;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.impl.util.ReflectUtil;
@@ -29,6 +20,7 @@ import org.activiti.engine.impl.variable.VariableType;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.Task;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
@@ -40,7 +32,10 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.type.JdbcType;
 import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -51,20 +46,34 @@ import java.util.*;
 
 
 @Component
-public class MySillyActivitiEngineService implements SillyEngineService<MySillyActivitiTask, MySillyMasterTask> {
+public class MySillyActivitiEngineService implements ApplicationContextAware, InitializingBean {
 
-    @Autowired
-    private SillyContext sillyContext;
+    public static final String GROUP_USER_ID_PREFIX = "group_user_id_prefix@@";
+
+    private ApplicationContext applicationContext;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initSqlSessionFactory(applicationContext);
+        otherInit(applicationContext);
+    }
 
     private final static Log log = LogFactory.getLog(MySillyActivitiEngineService.class);
 
     private SqlSessionFactory sqlSessionFactory;
     private final String DEFAULT_MYBATIS_MAPPING_FILE = "iqiny/silly/mappings.xml";
 
-    protected void initSqlSessionFactory(SillyContext sillyContext) {
-        DataSource dataSource = sillyContext.getBean(DataSource.class);
-        TransactionFactory transactionFactory = sillyContext.getBean(TransactionFactory.class);
-        if (transactionFactory == null) {
+    protected void initSqlSessionFactory(ApplicationContext context) {
+        DataSource dataSource = context.getBean(DataSource.class);
+        TransactionFactory transactionFactory = null;
+        try{
+            transactionFactory = context.getBean(TransactionFactory.class);
+        } catch (BeansException e){
             transactionFactory = new SpringManagedTransactionFactory();
         }
 
@@ -79,40 +88,23 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
             configuration = parser.parse();
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
         } catch (Exception e) {
-            throw new SillyException("Error while building ibatis SqlSessionFactory: " + e.getMessage(), e);
+            throw new RuntimeException("Error while building ibatis SqlSessionFactory: " + e.getMessage(), e);
         }
     }
 
-    @Override
-    public void init() {
-        init(sillyContext);
-    }
 
-    public void init(SillyContext sillyContext) {
-        initSqlSessionFactory(sillyContext);
-        otherInit(sillyContext);
-    }
 
-    @Override
     public List<MySillyMasterTask> getDoingMasterTask(String category, String userId, Set<String> allGroupId) {
         return getMyDoingMasterTaskId(category, userId, null, allGroupId);
     }
 
-    @Override
-    public List<MySillyMasterTask> getHistoryMasterTask(String category, String userId) {
-        Map<String, Object> param = new HashMap<>();
-        param.put("category", category);
-        param.put("userId", userId);
 
-        try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
-            return sqlSession.selectList(namespace() + "getHistoryMasterTask", param);
-        } catch (Exception e) {
-            log.warn("数据查询异常" + e.getMessage(), e);
-        }
+    public List<MySillyMasterTask> getHistoryMasterTask(String category, String userId) {
+        // 不在流程引擎中做历史数据查询，而是根据业务履历进行查询
         return new ArrayList<>();
     }
 
-    @Override
+
     public List<MySillyMasterTask> getMyDoingMasterTaskId(String category, String userId, String masterId, Set<String> allGroupId) {
         Map<String, Object> param = new HashMap<>();
         param.put("allGroupId", allGroupId);
@@ -128,7 +120,7 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
     }
 
     private String namespace() {
-        return "com.iqiny.silly.core.read.MySillyMasterTask.";
+        return "com.iqiny.silly.demo.activitiservice.activiti.entity.MySillyMasterTask.";
     }
 
     protected ManagementService managementService;
@@ -138,12 +130,12 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
     protected RepositoryService repositoryService;
 
 
-    public void otherInit(SillyContext sillyContext) {
-        this.managementService = sillyContext.getBean(ManagementService.class);
-        this.runtimeService = sillyContext.getBean(RuntimeService.class);
-        this.historyService = sillyContext.getBean(HistoryService.class);
-        this.taskService = sillyContext.getBean(TaskService.class);
-        this.repositoryService = sillyContext.getBean(RepositoryService.class);
+    public void otherInit(ApplicationContext context) {
+        this.managementService = context.getBean(ManagementService.class);
+        this.runtimeService = context.getBean(RuntimeService.class);
+        this.historyService = context.getBean(HistoryService.class);
+        this.taskService = context.getBean(TaskService.class);
+        this.repositoryService = context.getBean(RepositoryService.class);
     }
 
     public MySillyActivitiTask convertor(Task task) {
@@ -166,8 +158,8 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         return taskList;
     }
 
-    @Override
-    public String start(SillyMaster master, Map<String, Object> variableMap) {
+
+    public String start(SillyMasterVO master, Map<String, Object> variableMap) {
         if (StringUtils.isEmpty(master.processKey())) {
             throw new RuntimeException("流程启动时流程KEY 不可为空！");
         }
@@ -181,8 +173,8 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         return processInstance.getId();
     }
 
-    @Override
-    public void complete(SillyTask task, String userId, Map<String, Object> variableMap) {
+
+    public void complete(MySillyActivitiTask task, String userId, Map<String, Object> variableMap) {
         String taskId = task.getId();
         if (StringUtils.isEmpty(task.getId())) {
             throw new RuntimeException("当前执行的任务ID获取失败");
@@ -195,8 +187,8 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         taskService.complete(taskId, variableMap);
     }
 
-    @Override
-    public List<MySillyActivitiTask> changeTask(SillyTask task, String nodeKey, String userId) {
+
+    public List<MySillyActivitiTask> changeTask(MySillyActivitiTask task, String nodeKey, String userId) {
         String processInstanceId = task.getProcessInstanceId();
         String taskId = task.getId();
         if (StringUtils.isEmpty(taskId) || StringUtils.isEmpty(processInstanceId)) {
@@ -220,15 +212,15 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         return findTaskByProcessInstanceId(processInstanceId);
     }
 
-    @Override
+
     public List<MySillyActivitiTask> findTaskByProcessInstanceId(String processInstanceId) {
         if (StringUtils.isEmpty(processInstanceId)) {
-            throw new SillyException("查询任务列表，流程实例ID不可为空！");
+            throw new RuntimeException("查询任务列表，流程实例ID不可为空！");
         }
         return convertor(taskService.createTaskQuery().processInstanceId(processInstanceId).list());
     }
 
-    @Override
+
     public MySillyActivitiTask findTaskById(String taskId) {
         if (StringUtils.isEmpty(taskId)) {
             return null;
@@ -236,20 +228,20 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         return convertor(taskService.createTaskQuery().taskId(taskId).singleResult());
     }
 
-    @Override
+
     public String getBusinessKey(String processInstanceId) {
         final HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
         return historicProcessInstance.getBusinessKey();
     }
 
-    @Override
+
     public String getBusinessKeyByTaskId(String taskId) {
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         return getBusinessKey(task.getProcessInstanceId());
     }
 
-    @Override
-    public Long getTaskDueTime(SillyTask task) {
+
+    public Long getTaskDueTime(MySillyActivitiTask task) {
         if (task == null || StringUtils.isEmpty(task.getId())) {
             return 0L;
         }
@@ -258,8 +250,8 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         return historicTaskInstance.getDurationInMillis();
     }
 
-    @Override
-    public List<String> getTaskUserIds(SillyTask task) {
+
+    public List<String> getTaskUserIds(MySillyActivitiTask task) {
         final String taskId = task.getId();
         return getTaskUserIds(taskId);
     }
@@ -272,7 +264,7 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
                 String groupId = link.getGroupId();
                 String userId = link.getUserId();
                 if (StringUtils.isNotEmpty(groupId)) {
-                    ids.add(BaseSillyTaskGroupHandle.GROUP_USER_ID_PREFIX + groupId);
+                    ids.add(GROUP_USER_ID_PREFIX + groupId);
                 } else if (StringUtils.isNotEmpty(userId)) {
                     ids.add(userId);
                 }
@@ -281,7 +273,7 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         return ids;
     }
 
-    @Override
+
     public void endProcessByProcessInstanceId(String processInstanceId, String userId) {
         List<MySillyActivitiTask> tasks = findTaskByProcessInstanceId(processInstanceId);
         if (!tasks.isEmpty()) {
@@ -291,7 +283,7 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
 
     public void endProcessByProcessInstanceId(String actProcessId, MySillyActivitiTask task, String userId) {
         if (task != null) {
-            changeTask(task, SillyConstant.ActivitiNode.KEY_END, userId);
+            changeTask(task, "end", userId);
         }
         if (actProcessId != null) {
             List<MySillyActivitiTask> tasks = findTaskByProcessInstanceId(actProcessId);
@@ -301,7 +293,7 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         }
     }
 
-    @Override
+
     public String getActKeyNameByProcessInstanceId(String processInstanceId) {
         final String processDefinitionId = getProcessDefinitionIdByProcessInstanceId(processInstanceId);
         if (StringUtils.isEmpty(processDefinitionId)) {
@@ -370,7 +362,7 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         return processDefinitionId;
     }
 
-    @Override
+
     public void deleteProcessInstance(String processInstanceId, String deleteReason) {
         runtimeService.deleteProcessInstance(processInstanceId, deleteReason);
     }
@@ -380,12 +372,12 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
         return historyService.createHistoricProcessInstanceQuery().processInstanceBusinessKey(masterId).list();
     }
 
-    @Override
+
     public List<MySillyMasterTask> findMyTaskByMasterId(String category, String userId, String masterId, Set<String> allGroupId) {
         return getMyDoingMasterTaskId(category, userId, masterId, allGroupId);
     }
 
-    @Override
+
     public List<MySillyActivitiTask> findTaskByMasterId(String masterId) {
         final List<HistoricProcessInstance> processInstances = findProcessInstanceByMasterId(masterId);
         List<MySillyActivitiTask> taskList = new ArrayList<>();
@@ -396,23 +388,24 @@ public class MySillyActivitiEngineService implements SillyEngineService<MySillyA
     }
 
 
-    @Override
+
     public void changeUser(String taskId, String userId) {
         taskService.setAssignee(taskId, userId);
     }
 
-    @Override
+
     public void addUser(String taskId, String userId) {
         taskService.addCandidateUser(taskId, userId);
     }
 
-    @Override
+
     public void deleteUser(String taskId, String userId) {
         taskService.deleteCandidateUser(taskId, userId);
     }
 
-    @Override
+
     public void deleteTask(String taskId) {
         taskService.deleteTask(taskId);
     }
+
 }
