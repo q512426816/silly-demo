@@ -59,7 +59,8 @@ public class MySillyResumeService implements SillyResumeService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void insert(SillyResume sillyResume) {
-        if (sillyResume instanceof MySillyResume resume) {
+        if (sillyResume instanceof MySillyResume) {
+            MySillyResume resume = (MySillyResume) sillyResume;
             resume.setHandleDate(new Date());
             resume.preInsert();
             resume.insert();
@@ -88,13 +89,9 @@ public class MySillyResumeService implements SillyResumeService {
         handleMap.put(SillyConstant.SillyResumeType.PROCESS_TYPE_START, "执行流程启动");
     }
 
-    protected Class<MySillyResume> getQueryClazz() {
-        return MySillyResume.class;
-    }
-
-
     /**
      * 根据履历获取 历史处置任务
+     *
      * @param category
      * @param userId
      */

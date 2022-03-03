@@ -28,7 +28,7 @@ public class MyRestExceptionHandler {
      * 处理傻瓜异常
      */
     @ExceptionHandler(SillyException.class)
-    public SillyR handleRuntimeException(SillyException e) {
+    public SillyR handleSillyException(SillyException e) {
         logger.warn(e.getMessage(), e);
         return SillyR.error(e.getMessage());
     }
